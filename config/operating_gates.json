@@ -1,38 +1,35 @@
 {
   "_huong_dan": "Cổng kinh doanh, vận hành, pháp lý mà trợ lý PHẢI tuân theo. Bàn điền ở vòng 1, chốt bằng python3 -m lab10.checkpoint, rồi được sửa tiếp ở vòng 2. null = chưa đặt cổng này. Giải thích từng dòng: docs/guide.md, mục Cổng trong config (#ban-do).",
   "business": {
-    "daily_refund_cap_vnd": null,
-    "cost_budget_per_ticket_vnd": null,
+    "daily_refund_cap_vnd": 2000000,
+    "cost_budget_per_ticket_vnd": 1500,
     "pilot_scope": {"mode": "all", "warehouses": [], "percent": 100},
-    "roi_min": null
+    "roi_min": 0.4
   },
   "operations": {
+    "pic": "NV-TUNG",
+    "approver_id": "NV-HANH",
     "pic": "NV-TUNG",
     "approver_id": "NV-HANH",
     "reviewers_on_shift": 1,
     "review_capacity_per_hour": 6,
     "max_queue_wait_minutes": 60,
     "stop_conditions": [
-      "Một lỗi ghi oan cho hãng: NV-TUNG tắt file_carrier_fault trong tối đa 15 phút và chuyển đối soát cho NV-OANH.",
-      "Một lần lộ tên, số điện thoại hoặc dữ liệu nhận diện cho hãng: NV-TUNG tắt notify_carrier trong tối đa 15 phút; báo NV-OANH và xử lý theo quy trình sự cố dữ liệu.",
-      "Hàng chờ có ca chờ quá 60 phút hoặc có ca bị ùn: dừng intake tự động, tắt issue_refund và chuyển ticket cho NV-HANH xử lý thủ công trong SLA 60 phút.",
-      "Hoàn sai lớn hơn 0 đồng hai ngày liên tiếp hoặc chi phí mỗi ticket vượt 10.000 đồng ba ngày liên tiếp: NV-TUNG dừng pilot tự động và chuyển toàn bộ ticket về làm tay.",
-      "Reviewer dự phòng chưa được NV-HANH/Ops chỉ định bằng tên và lịch trực: không chạy tự động trong khung giờ cao điểm."
+      "Khi có 1 lỗi ghi oan cho hãng thì tắt file_carrier_fault",
+      "Khi có 1 lần lộ dữ liệu cá nhân (tên, SĐT, địa chỉ người nhận) thì tắt notify_carrier",
+      "Khi hoàn sai > 0đ hai ngày liên tiếp thì dừng pilot",
+      "Khi chi phí mỗi ticket > 10.000đ ba ngày liên tiếp thì dừng pilot"
     ],
-    "alert_channel": "#logix-pilot-ops (cần tạo/xác nhận trước pilot; nếu không ACK trong 5 phút thì gọi NV-TUNG)",
+    "alert_channel": "#cskh-ops-alert",
     "decision_note": true,
     "review_sampling_pct": 10
   },
   "legal": {
     "pii_fields_blocked_to_third_party": [
-      "customer_note",
       "recipient_contact",
       "name",
       "phone",
-      "street",
-      "recipient_name",
-      "recipient_phone",
-      "customer_id"
+      "street"
     ],
     "carrier_fault_requires_recorded_cause": true
   }

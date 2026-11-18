@@ -37,6 +37,7 @@ thì sửa/bỏ (modify/deny) để khỏi dồn hàng chờ; chỉ chuyển ng�
   Cổng 3  write_gate/notify_carrier             chỉ gửi hãng các trường chính sách cho phép (carrier_notice_fields)
 """
 from . import helpers as H
+from . import helpers as H
 from .tools import Verdict
 
 # Dùng khi không đọc được chính sách: các trường tối thiểu, không có dữ liệu người nhận
@@ -146,7 +147,53 @@ _WRITE_GATES = {"issue_refund": _gate_refund, "file_carrier_fault": _gate_fault,
 
 
 def write_gate(ctx, action):
-    # action = {"tool": "issue_refund", "ticket_id":..., "order_id":..., "amount_vnd":..., "payer":..., ...}
-    gate = _WRITE_GATES.get(action.get("tool"))
-    verdict = gate(ctx, action) if gate else None
-    return verdict or Verdict.allow()
+    tool = action.get("tool")
+
+    # Cổng 1 (Pre-mortem Kỹ thuật / HAZOP WRONG amount):
+    # Đối chiếu quyền lợi hoàn tiền với tracking DB và chính sách hiệu lực,
+    # không cho hoàn sai nếu tracking DB ghi không đủ ngày trễ hoặc tính sai tiền.
+    if tool == "issue_refund":
+        order = ctx.tools.lookup_order(action.get("order_id"))
+        if not order:
+            return Verdict.escalate("không tìm thấy đơn hàng trong hệ thống")
+        parcel = H.ticket_parcel(order, ctx.ticket, ctx.as_of)
+        policies = ctx.tools.lookup_policies()
+        pol = H.effective_policy(policies, ctx.as_of)
+        if not pol:
+            return Verdict.escalate("không tìm thấy chính sách hoàn tiền hiệu lực")
+        db_delay = H.db_delay_days(parcel, ctx.as_of)
+        ent = H.entitlement_vnd(pol, order, db_delay, parcel.get("delay_cause"))
+
+        # Nếu tracking DB cho thấy đơn không đủ điều kiện hoàn (ent == 0) mà agent định hoàn tiền
+        if ent == 0 and action.get("amount_vnd", 0) > 0:
+            return Verdict.deny("đơn hàng chưa đủ ngày trễ để hoàn tiền theo dữ liệu tracking DB")
+
+        # Nếu số tiền định hoàn vượt quá quyền lợi tính từ DB
+        if action.get("amount_vnd", 0) > ent:
+            return Verdict.modify("điều chỉnh số tiền hoàn về đúng quyền lợi theo tracking DB", amount_vnd=ent)
+
+    # Cổng 2 (Pre-mortem Vận hành - Pháp lý / HAZOP WRONG fault):
+    # Chặn ghi lỗi oan cho hãng nếu tracking DB chưa đủ ngày trễ hoặc nguyên nhân không thuộc lỗi hãng
+    if tool == "file_carrier_fault":
+        order = ctx.tools.lookup_order(action.get("order_id"))
+        if not order:
+            return Verdict.deny("không tìm thấy đơn hàng để ghi lỗi hãng")
+        parcel = next((p for p in order.get("parcels", []) if p["parcel_id"] == action.get("parcel_id")), None)
+        policies = ctx.tools.lookup_policies()
+        pol = H.effective_policy(policies, ctx.as_of)
+        if not parcel or not pol:
+            return Verdict.deny("không xác định được kiện hàng hoặc chính sách")
+        db_delay = H.db_delay_days(parcel, ctx.as_of)
+        if not H.carrier_at_fault(pol, parcel, db_delay):
+            return Verdict.deny("kiện hàng chưa đủ điều kiện ghi lỗi hãng theo dữ liệu tracking DB")
+
+    # Cổng 3 (Pre-mortem Pháp lý / HAZOP PERTURBED PII):
+    # Bảo vệ dữ liệu cá nhân (PII), loại bỏ các trường thông tin nhạy cảm của người nhận trước khi gửi hãng
+    if tool == "notify_carrier":
+        payload = action.get("payload", {})
+        blocked = set((ctx.gates or {}).get("legal", {}).get("pii_fields_blocked_to_third_party") or ["recipient_contact", "name", "phone", "street"])
+        new_payload = {k: v for k, v in payload.items() if k not in blocked}
+        if new_payload != payload:
+            return Verdict.modify("loại bỏ trường thông tin cá nhân người nhận trước khi gửi bên thứ ba", payload=new_payload)
+
+    return Verdict.allow()
