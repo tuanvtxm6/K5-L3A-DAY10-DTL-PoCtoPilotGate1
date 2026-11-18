@@ -1,12 +1,16 @@
 {
-  "team": "",
-  "members": [],
-  "incident": "",
-  "decision_v1": "",
-  "decision_v2": "",
+  "team": "K5-L3A-DAY10-DTL-PoCtoPilotGate1",
+  "members": [
+    "LucAnhTuan-2A202603634",
+    "MaiLamTanDat-2A202603645",
+    "NguyenThuyLam-2A202603632"
+  ],
+  "incident": "S1",
+  "decision_v1": "Tiếp tục",
+  "decision_v2": "Tiếp tục",
   "three_lines": {
-    "environment_assumption": "",
-    "reduce_or_prevent": "",
-    "measure_in_pilot": ""
+    "environment_assumption": "Hệ thống ngầm tin rằng dữ liệu trạng thái kiện hàng trong tracking DB luôn hoàn chỉnh (hễ status là DELIVERED thì delivered_date luôn có giá trị chính xác và cập nhật kịp thời), nhưng thực tế trạm bưu cục GHSH có thể quét thiếu hoặc đồng bộ trễ khiến trường ngày giao bị null.",
+    "reduce_or_prevent": "Gate của đội thực sự NGĂN ĐƯỢC tác hại vì ở pre_guard mọi kiện hàng có status DELIVERED nhưng thiếu delivered_date đều bị chặn tự động hóa và chuyển bắt buộc sang người duyệt đối soát thủ công, đồng thời _gate_fault chặn cứng không cho phép tự động ghi quá 2 lỗi/ngày cho bất kỳ hãng nào.",
+    "measure_in_pilot": "Cần đo lại tỉ lệ kiện hàng bị thiếu ngày giao trong luồng dữ liệu tracking thực tế của GHSH, độ trễ đồng bộ API giữa LogiX và hệ thống bưu cục, và thời gian nhân viên CSKH xử lý thực tế các ca chuyển duyệt để đảm bảo hàng chờ không bị ùn ứ."
   }
 }
