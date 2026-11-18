@@ -5,7 +5,7 @@
 - Tên nhóm (`TenNhom`, không dấu, không khoảng trắng): `DTL`
 - Lớp: `L3A`
 - Repo của bàn: `K5-L3A-DAY10-DTL-PoCtoPilotGate1` (https://github.com/tuanvtxm6/K5-L3A-DAY10-DTL-PoCtoPilotGate1)
-- Thẻ sự cố đã bốc (S1–S8): (chưa bốc, phát ở phút 125)
+- Thẻ sự cố đã bốc (S1–S8): `S1`
 - Bản chung từ Lab 9 (chọn ở phút 0–15): PRD v1.1 và eval card của Lục Anh Tuấn (2A202603634), chép vào [`docs/lab9/PRD_v1.1.md`](docs/lab9/PRD_v1.1.md) và [`docs/lab9/eval_card.md`](docs/lab9/eval_card.md); baseline Lab 9 `E-swarm-20261117-f3a4` (v1), `E-swarm-20261117-7647` (v2)
 
 ## Thành viên
