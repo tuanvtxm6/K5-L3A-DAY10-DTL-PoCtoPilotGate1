@@ -80,20 +80,29 @@ Mỗi thành viên tự viết một mục bên dưới (chép mẫu, đổi ti�
 - **Một điều học được:** Sự cố ngoài thực tế (như thẻ S1) hiếm khi chỉ đến từ model mà phần lớn đến từ các giả định môi trường sai lệch về tính toàn vẹn của dữ liệu ngoại vi (tracking DB thiếu `delivered_date`) và sự thiếu vắng các cơ chế bảo vệ hợp đồng đối tác (circuit breaker trần lỗi dồn dập). Các cổng kiến trúc phân tầng (guards chặn lệnh ghi, chuyển người đối soát có chọn lọc) mang lại sự an toàn và hiệu quả kinh doanh vượt trội so với việc cố gắng tinh chỉnh prompt.
 - **Một điều còn chưa chắc:** Trong điều kiện vận hành thực tế diện rộng, khi đường truyền API giữa các trạm bưu cục vùng sâu vùng xa của hãng GHSH bị gián đoạn kéo dài, tỉ lệ ticket bị chuyển người duyệt (`escalation_rate`) có thể tăng cao, đòi hỏi bàn phải tiếp tục theo dõi sát sao chi phí nhân sự đối soát và thời gian phản hồi khách hàng trong giai đoạn Pilot Gate 2.
 
-## HoVaTen-MSSV
+## HoVaTen - MSSV
+### NguyenThuyLam-2A202603632
 
 ### Phần việc phụ trách
 
-Vai trong bàn; câu nào của đề, mục nào của phiếu A/B/C, file nào (`lab10/guards.py`, `config/operating_gates.json`, …).
+- **Vai trong bàn:** Vận hành và pháp lý.
+
+- **CP3 (Phiếu B):** Cùng nhóm hoàn thiện phần vận hành/pháp lý trong Phiếu B và các cổng ở `config/operating_gates.json`; tập trung vào người phụ trách, người duyệt, năng lực xử lý, thời gian hàng chờ, điều kiện dừng, kênh cảnh báo, kiểm mẫu, dữ liệu cá nhân không được gửi cho bên thứ ba và yêu cầu phải có nguyên nhân được ghi nhận khi quy lỗi hãng.
+- **CP4 (Phiếu C, sự cố S1):** Rà soát kết quả grade S1; ghi nhận rủi ro tích lũy lỗi hãng, dữ liệu tracking thiếu/không nhất quán; bổ sung hướng dẫn tạm dừng/đối soát và cập nhật Phiếu C mục C1, C3.5, C4, C5, C7, C10, C11.
 
 ### Đóng góp cụ thể
 
-...
+- Đặt và làm rõ các cổng vận hành/pháp lý: PIC vận hành `NV-TUNG`, người duyệt `NV-HANH`, năng lực reviewer 6 ticket/giờ, thời gian chờ tối đa 60 phút, kênh cảnh báo `#cskh-ops-alert`, kiểm mẫu 10%; quy định dừng khi có lỗi ghi oan cho hãng hoặc lộ PII.
+- Giữ danh sách trường PII bị chặn khi gửi cho bên thứ ba (`recipient_contact`, `name`, `phone`, `street`) và yêu cầu có `delay_cause` được ghi nhận trước khi quy lỗi hãng.
+- Với S1, ghi nhận report after còn 15 lỗi hãng oan, 275.000đ hoàn sai, chi phí/ticket 3.656đ; đề xuất dừng tự động theo hãng ở 2 lỗi/ngày, chuyển người duyệt khi tracking thiếu ngày giao/nguyên nhân, và đối soát nếu chạm 3 lỗi trong 7 ngày. Đây là hướng dẫn/điều kiện vận hành, chưa phải gate/monitor được triển khai trong code.
 
 ### Bằng chứng
 
 Mã commit, mã lần chạy (`runs/<mã>`), dòng trong phiếu.
 
+- **Commit:** `cc2aeb9` — `cp3 van hanh phap ly` 
+
 ### Exit ticket
 
-Một điều học được, một điều còn chưa chắc.
+- **Một điều học được:** Quy trình vận hành cần kiểm soát lỗi theo cả ticket lẫn theo hãng và cửa sổ thời gian; có dữ liệu tracking thiếu hoặc mâu thuẫn thì phải chuyển người, không suy diễn để hoàn tiền hay ghi lỗi hãng.
+- **Một điều còn chưa chắc:** Cần xác nhận với GHSH cách tính ngày nghiệp vụ/cửa sổ 7 ngày và quy trình chính thức để tranh chấp, đính chính các lỗi đã ghi.
