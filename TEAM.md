@@ -13,9 +13,9 @@ Họ tên đầy đủ và MSSV của **mọi** thành viên; thêm dòng nếu 
 
 | STT | Họ và tên | MSSV | Vai | Trưởng nhóm |
 | --: | --------- | ---- | --- | :---------: |
-|   1 |           |      |     |             |
-|   2 |           |      |     |             |
-|   3 |           |      |     |             |
+|   1 |      Lục Anh Tuấn     |   2A202603634   |   Kỹ sư cổng  |      v      |
+|   2 |     Mai Lâm Tấn Đạt      |   2A202603645   |   Sản phẩm và kinh doanh  |             |
+|   3 |      Nguyễn Thùy Lam     |   2A202603632   |   Vận hành và pháp lý  |             |
 |   4 |           |      |     |             |
 
 Ghi `members` trong `submission/submission.json` theo dạng `"HoVaTen-MSSV"`, khớp bảng trên.
