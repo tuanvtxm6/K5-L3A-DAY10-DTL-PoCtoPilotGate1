@@ -19,7 +19,13 @@ def escalation_rate(trials):
     return sum(t["status"] == "escalated" for t in trials) / max(1, len(trials))
 
 
+def ghsh_fault_rate(trials):
+    """Tỉ lệ ticket bị ghi lỗi phạt hãng Giao Hàng Sông Hồng (GHSH). Bắt sự cố dồn dập lỗi hãng S1."""
+    return sum(any(f.get("carrier_id") == "GHSH" for f in t.get("faults", [])) for t in trials) / max(1, len(trials))
+
+
 MONITORS = {
     "escalation_rate": escalation_rate,     # có sẵn; KHÔNG tính là metric mới của đội
+    "ghsh_fault_rate": ghsh_fault_rate,     # chỉ số theo dõi mới cho sự cố S1
 }
 STARTER_MONITORS = ("escalation_rate",)

@@ -36,6 +36,7 @@ thì sửa/bỏ (modify/deny) để khỏi dồn hàng chờ; chỉ chuyển ng�
   Cổng 2  write_gate/file_carrier_fault         chỉ ghi lỗi hãng khi tracking ghi nguyên nhân thuộc lỗi hãng, đúng kiện trễ
   Cổng 3  write_gate/notify_carrier             chỉ gửi hãng các trường chính sách cho phép (carrier_notice_fields)
 """
+import re
 from . import helpers as H
 from .tools import Verdict
 
@@ -65,12 +66,32 @@ def _approval_ok(ctx, approval_id, action):
         and a.get("order_id") == action.get("order_id") and a.get("max_vnd", 0) >= action.get("amount_vnd", 0)
 
 
+_DELAY_SUB = re.compile(r"(\b(?:trễ|tre|chậm|muộn|late|delay(?:ed)?)\D{0,24}?)\d{1,3}(\s*(?:ngày|ngay|days?|hôm))", re.I)
+
+
 def pre_guard(ctx):
     # Cổng 1 (phần đầu): ghim chính sách theo ngày hiệu lực. Agent đọc cờ index_active, cờ này có thể lệch
     # khi chính sách đổi phiên bản (REFUND-v4 có hiệu lực 01/12/2026).
     pol = _policy(ctx)
     if pol is None:
         return Verdict.escalate("không có chính sách hoàn tiền nào hiệu lực ở ngày xử lý")
+
+    # S1 & Vận hành: Dữ liệu chưa đầy đủ (INCOMPLETE) - Kiện đã DELIVERED nhưng tracking thiếu delivered_date
+    order_id = ctx.ticket.get("order_id")
+    if order_id:
+        order = ctx.tools.lookup_order(order_id)
+        if order and order.get("parcels"):
+            parcel = H.ticket_parcel(order, ctx.ticket, ctx.as_of)
+            if parcel.get("status") == "DELIVERED" and not parcel.get("delivered_date"):
+                return Verdict.escalate("kiện hàng đã giao nhưng thiếu ngày giao trong tracking DB, cần đối soát thủ công")
+
+    # S1 & Kỹ thuật: Loại bỏ số ngày khách tự khai để tránh LLM override dữ liệu tracking DB
+    text = ctx.ticket.get("text", "")
+    new_text = _DELAY_SUB.sub(r"\1\2", text)
+    if new_text != text:
+        return Verdict.rewrite("loại bỏ số ngày khách tự khai để không ghi đè dữ liệu tracking DB",
+                               text=new_text, policy_id=pol["policy_id"])
+
     return Verdict.allow(policy_id=pol["policy_id"])
 
 
@@ -121,6 +142,15 @@ def _gate_fault(ctx, action):
     if not H.carrier_at_fault(pol, parcel, delay):
         ctx.log("carrier_fault_blocked", parcel_id=parcel["parcel_id"], cause=parcel.get("delay_cause"), db_delay_days=delay)
         return Verdict.deny("tracking không ghi nguyên nhân thuộc lỗi hãng cho kiện trễ, không ghi lỗi")
+
+    # S1 & Kinh doanh / Vận hành: Giới hạn trần số lỗi tự ghi cho một hãng trong ngày (ops_limits)
+    carrier_id = parcel["carrier_id"]
+    max_strikes = (ctx.tools.ops_limits() or {}).get("max_auto_strikes_per_carrier_per_day", 2)
+    current_strikes = len(ctx.tools.fault_rows(carrier_id=carrier_id))
+    if current_strikes >= max_strikes:
+        ctx.log("carrier_fault_cap_reached", carrier_id=carrier_id, current=current_strikes, max=max_strikes)
+        return Verdict.deny(f"hãng {carrier_id} đã đạt trần {max_strikes} lỗi tự động trong ngày (ops_limits), chuyển duyệt tay")
+
     if (action.get("parcel_id"), action.get("carrier_id")) != (parcel["parcel_id"], parcel["carrier_id"]):
         return Verdict.modify("ghi lỗi đúng kiện bị trễ và đúng hãng giao kiện đó", parcel_id=parcel["parcel_id"],
                               carrier_id=parcel["carrier_id"], driver_id=parcel.get("driver_id"), delay_days=delay)
