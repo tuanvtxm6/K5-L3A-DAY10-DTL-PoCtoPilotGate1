@@ -20,6 +20,8 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.1 · Một mục tiêu cấp hệ thống (khác "model trả lời đúng")
 
+*Nguồn chung của bàn: PRD v1.1 và eval card Lab 9 của Lục Anh Tuấn ([`docs/lab9/PRD_v1.1.md`](../docs/lab9/PRD_v1.1.md), [`docs/lab9/eval_card.md`](../docs/lab9/eval_card.md)). Câu 1.1 dựa vào PRD §3 (định nghĩa "chạy đúng": hai chỉ số an toàn = 0 có chặn release, tiền luôn chấm bằng code đối chiếu ledger); câu 1.2 dựa vào PRD §2 (phạm vi pilot) và §6 (rủi ro mở). Ngưỡng Day 10 chỉ chặt hơn Lab 9 (pass_rate 0,85 → 0,96; pass^5 0,80 → 0,86), đúng luật PRD §7. Chỗ lệch cần ghi ở Phiếu B: PRD §2 cho bồi thường hàng hỏng đã xác minh và trần 300.000đ, còn Day 10 luôn chuyển hàng hỏng cho người và hạn mức tự động theo REFUND-v3 là 200.000đ (REFUND-v4 từ 01/12: 100.000đ).*
+
 > *(Mai Lâm Tấn Đạt · Sản phẩm và kinh doanh)* Mỗi yêu cầu hoàn tiền giao trễ ở 2 depot pilot được khép lại **trong ca** theo một
 > trong ba cách (hoàn đúng số tiền theo chính sách **đang hiệu lực ở ngày xử lý**, từ chối có lý do, hoặc chuyển người kèm lý do),
 > sao cho **mọi dòng ghi ra bên ngoài** (sổ cái hoàn tiền, lỗi ghi cho hãng, tin nhắn gửi hãng, tin trả lời khách) khớp nguồn sự thật

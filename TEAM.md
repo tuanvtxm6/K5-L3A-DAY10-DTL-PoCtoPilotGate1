@@ -6,6 +6,7 @@
 - Lớp: `L3A` / `L3B`
 - Repo của bàn: `K5-<L3A|L3B>-DAY10-<TenNhom>-PoCtoPilotGate1`
 - Thẻ sự cố đã bốc (S1–S8):
+- Bản chung từ Lab 9 (chọn ở phút 0–15): PRD v1.1 và eval card của Lục Anh Tuấn (2A202603634), chép vào [`docs/lab9/PRD_v1.1.md`](docs/lab9/PRD_v1.1.md) và [`docs/lab9/eval_card.md`](docs/lab9/eval_card.md); baseline Lab 9 `E-swarm-20261117-f3a4` (v1), `E-swarm-20261117-7647` (v2)
 
 ## Thành viên
 
@@ -16,7 +17,6 @@ Họ tên đầy đủ và MSSV của **mọi** thành viên; thêm dòng nếu 
 |   1 |      Lục Anh Tuấn     |   2A202603634   |   Kỹ sư cổng  |      v      |
 |   2 |     Mai Lâm Tấn Đạt      |   2A202603645   |   Sản phẩm và kinh doanh  |             |
 |   3 |      Nguyễn Thùy Lam     |   2A202603632   |   Vận hành và pháp lý  |             |
-|   4 |           |      |     |             |
 
 Ghi `members` trong `submission/submission.json` theo dạng `"HoVaTen-MSSV"`, khớp bảng trên.
 
