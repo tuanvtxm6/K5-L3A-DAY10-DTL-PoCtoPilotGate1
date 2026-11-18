@@ -7,18 +7,33 @@
     "roi_min": null
   },
   "operations": {
-    "pic": "",
-    "approver_id": "",
+    "pic": "NV-TUNG",
+    "approver_id": "NV-HANH",
     "reviewers_on_shift": 1,
-    "review_capacity_per_hour": null,
-    "max_queue_wait_minutes": null,
-    "stop_conditions": [],
-    "alert_channel": "",
-    "decision_note": false,
-    "review_sampling_pct": 0
+    "review_capacity_per_hour": 6,
+    "max_queue_wait_minutes": 60,
+    "stop_conditions": [
+      "Một lỗi ghi oan cho hãng: NV-TUNG tắt file_carrier_fault trong tối đa 15 phút và chuyển đối soát cho NV-OANH.",
+      "Một lần lộ tên, số điện thoại hoặc dữ liệu nhận diện cho hãng: NV-TUNG tắt notify_carrier trong tối đa 15 phút; báo NV-OANH và xử lý theo quy trình sự cố dữ liệu.",
+      "Hàng chờ có ca chờ quá 60 phút hoặc có ca bị ùn: dừng intake tự động, tắt issue_refund và chuyển ticket cho NV-HANH xử lý thủ công trong SLA 60 phút.",
+      "Hoàn sai lớn hơn 0 đồng hai ngày liên tiếp hoặc chi phí mỗi ticket vượt 10.000 đồng ba ngày liên tiếp: NV-TUNG dừng pilot tự động và chuyển toàn bộ ticket về làm tay.",
+      "Reviewer dự phòng chưa được NV-HANH/Ops chỉ định bằng tên và lịch trực: không chạy tự động trong khung giờ cao điểm."
+    ],
+    "alert_channel": "#logix-pilot-ops (cần tạo/xác nhận trước pilot; nếu không ACK trong 5 phút thì gọi NV-TUNG)",
+    "decision_note": true,
+    "review_sampling_pct": 10
   },
   "legal": {
-    "pii_fields_blocked_to_third_party": [],
-    "carrier_fault_requires_recorded_cause": false
+    "pii_fields_blocked_to_third_party": [
+      "customer_note",
+      "recipient_contact",
+      "name",
+      "phone",
+      "street",
+      "recipient_name",
+      "recipient_phone",
+      "customer_id"
+    ],
+    "carrier_fault_requires_recorded_cause": true
   }
 }
