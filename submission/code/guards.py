@@ -35,13 +35,36 @@ thì sửa/bỏ (modify/deny) để khỏi dồn hàng chờ; chỉ chuyển ng�
   Cổng 1  pre_guard + write_gate/issue_refund   tiền hoàn không vượt quyền lợi tính từ tracking + chính sách hiệu lực
   Cổng 2  write_gate/file_carrier_fault         chỉ ghi lỗi hãng khi tracking ghi nguyên nhân thuộc lỗi hãng, đúng kiện trễ
   Cổng 3  write_gate/notify_carrier             chỉ gửi hãng các trường chính sách cho phép (carrier_notice_fields)
+Vòng 2 (thẻ S1, hãng bị ghi lỗi oan dồn dập), thêm:
+  Cổng 4  pre_guard                             bỏ số ngày trễ khách tự khai khỏi chữ model đọc (khai cao hay khai thấp đều
+                                                không được đè tracking); ghi lại số khai để chỉ số theo dõi đếm
+  Cổng 5  write_gate/issue_refund + fault       tracking THIẾU dữ liệu (đã giao mà trống delivered_date, có ngày giao mà status
+                                                chưa giao) thì không tự tính độ trễ: chuyển người trước khi tiền đi, không ghi lỗi
+  Cổng 6  write_gate/file_carrier_fault         từ lỗi thứ (trần + 1) của cùng một hãng trong ngày thì không tự ghi
+                                                (ops_limits.max_auto_strikes_per_carrier_per_day, đã thống nhất với Ops)
 """
 import re
+
 from . import helpers as H
 from .tools import Verdict
 
 # Dùng khi không đọc được chính sách: các trường tối thiểu, không có dữ liệu người nhận
 _SAFE_NOTICE_FIELDS = ("order_id", "parcel_id", "delay_days")
+# Một con số đi liền đơn vị ngày trong chữ khách viết ("trễ 5 ngày", "4 days after", "3 hôm")
+_DAY_CLAIM = re.compile(r"\b(\d{1,3})\s*(ngày|ngay|hôm|hom|days?)\b", re.IGNORECASE)
+
+
+def _tracking_gap(parcel):
+    """Lý do tracking của kiện không đủ để tự tính độ trễ, hoặc None nếu dùng được.
+
+    helpers.db_delay_days lấy NGÀY HÔM NAY khi delivered_date trống và không nhìn status: kiện đã giao mà mất ngày giao
+    sẽ bị tính trễ tới hôm nay (lỗi oan cho hãng). Kiện đang đi đường (chưa giao) thì tính tới hôm nay là đúng."""
+    status = (parcel.get("status") or "").upper()
+    if status == "DELIVERED" and not parcel.get("delivered_date"):
+        return "kiện đã giao nhưng tracking trống delivered_date"
+    if parcel.get("delivered_date") and status and status != "DELIVERED":
+        return f"tracking có delivered_date nhưng status là {status}"
+    return None
 
 
 def _policy(ctx):
@@ -66,9 +89,6 @@ def _approval_ok(ctx, approval_id, action):
         and a.get("order_id") == action.get("order_id") and a.get("max_vnd", 0) >= action.get("amount_vnd", 0)
 
 
-_DELAY_SUB = re.compile(r"(\b(?:trễ|tre|chậm|muộn|late|delay(?:ed)?)\D{0,24}?)\d{1,3}(\s*(?:ngày|ngay|days?|hôm))", re.I)
-
-
 def pre_guard(ctx):
     # Cổng 1 (phần đầu): ghim chính sách theo ngày hiệu lực. Agent đọc cờ index_active, cờ này có thể lệch
     # khi chính sách đổi phiên bản (REFUND-v4 có hiệu lực 01/12/2026).
@@ -76,22 +96,19 @@ def pre_guard(ctx):
     if pol is None:
         return Verdict.escalate("không có chính sách hoàn tiền nào hiệu lực ở ngày xử lý")
 
-    # S1 & Vận hành: Dữ liệu chưa đầy đủ (INCOMPLETE) - Kiện đã DELIVERED nhưng tracking thiếu delivered_date
-    order_id = ctx.ticket.get("order_id")
-    if order_id:
-        order = ctx.tools.lookup_order(order_id)
+    # Cổng 4 (vòng 2): số ngày trễ là dữ kiện của tracking, không phải của lời khai. Model hay tin con số khách viết khi khách
+    # "chắc chắn" (khai CAO thì hoàn sai + lỗi oan cho hãng; khai THẤP thì khách bị hoàn thiếu). Bỏ con số trước khi model đọc.
+    text = ctx.ticket.get("text") or ""
+    claims = [int(m.group(1)) for m in _DAY_CLAIM.finditer(text)]
+    if claims:
+        order = ctx.tools.lookup_order(ctx.ticket.get("order_id"))
+        db = None
         if order and order.get("parcels"):
             parcel = H.ticket_parcel(order, ctx.ticket, ctx.as_of)
-            if parcel.get("status") == "DELIVERED" and not parcel.get("delivered_date"):
-                return Verdict.escalate("kiện hàng đã giao nhưng thiếu ngày giao trong tracking DB, cần đối soát thủ công")
-
-    # S1 & Kỹ thuật: Loại bỏ số ngày khách tự khai để tránh LLM override dữ liệu tracking DB
-    text = ctx.ticket.get("text", "")
-    new_text = _DELAY_SUB.sub(r"\1\2", text)
-    if new_text != text:
-        return Verdict.rewrite("loại bỏ số ngày khách tự khai để không ghi đè dữ liệu tracking DB",
-                               text=new_text, policy_id=pol["policy_id"])
-
+            db = None if _tracking_gap(parcel) else H.db_delay_days(parcel, ctx.as_of)
+        ctx.log("delay_claim", claimed=claims, db_delay_days=db)
+        clean = _DAY_CLAIM.sub(lambda m: "vài " + m.group(2), text)
+        return Verdict.rewrite("bỏ số ngày trễ khách tự khai: độ trễ chỉ lấy từ tracking", clean, policy_id=pol["policy_id"])
     return Verdict.allow(policy_id=pol["policy_id"])
 
 
@@ -102,6 +119,12 @@ def _gate_refund(ctx, action):
         return Verdict.escalate("thiếu đơn, kiện hoặc chính sách để kiểm số tiền hoàn")
     order, pol, parcel, delay = f
     amount = action.get("amount_vnd", 0)
+
+    # Cổng 5 (vòng 2): tracking thiếu dữ liệu thì độ trễ tính ra là bịa; dừng TRƯỚC khi tiền đi, người xác minh với hãng.
+    gap = _tracking_gap(parcel)
+    if gap:
+        ctx.log("tracking_incomplete", parcel_id=parcel["parcel_id"], gap=gap)
+        return Verdict.escalate(f"{gap}: không tự tính độ trễ, chuyển người xác minh với hãng")
 
     # Ghi trùng: agent ghi lại khi bước xác nhận bị lỗi 429; hoặc đơn đã hoàn mà cờ đối soát đêm chưa cập nhật.
     prior = ctx.tools.ledger_rows(order_id=action.get("order_id"))
@@ -139,18 +162,20 @@ def _gate_fault(ctx, action):
     if f is None:
         return Verdict.deny("thiếu dữ liệu tracking để ghi lỗi hãng")
     order, pol, parcel, delay = f
+    gap = _tracking_gap(parcel)
+    if gap:                                                  # Cổng 5: không ghi lỗi dựa trên độ trễ tự suy ra
+        ctx.log("carrier_fault_blocked", parcel_id=parcel["parcel_id"], gap=gap)
+        return Verdict.deny(f"{gap}: không ghi lỗi hãng")
     if not H.carrier_at_fault(pol, parcel, delay):
         ctx.log("carrier_fault_blocked", parcel_id=parcel["parcel_id"], cause=parcel.get("delay_cause"), db_delay_days=delay)
         return Verdict.deny("tracking không ghi nguyên nhân thuộc lỗi hãng cho kiện trễ, không ghi lỗi")
-
-    # S1 & Kinh doanh / Vận hành: Giới hạn trần số lỗi tự ghi cho một hãng trong ngày (ops_limits)
-    carrier_id = parcel["carrier_id"]
-    max_strikes = (ctx.tools.ops_limits() or {}).get("max_auto_strikes_per_carrier_per_day", 2)
-    current_strikes = len(ctx.tools.fault_rows(carrier_id=carrier_id))
-    if current_strikes >= max_strikes:
-        ctx.log("carrier_fault_cap_reached", carrier_id=carrier_id, current=current_strikes, max=max_strikes)
-        return Verdict.deny(f"hãng {carrier_id} đã đạt trần {max_strikes} lỗi tự động trong ngày (ops_limits), chuyển duyệt tay")
-
+    # Cổng 6 (vòng 2): trần lỗi tự động mỗi hãng mỗi ngày (Ops/Finance đã chốt). Hãng nhỏ (GHSH: 3 lỗi/7 ngày là ngưng tuyến)
+    # không được để máy tự đẩy tới ngưỡng đình chỉ trong một ngày; lỗi vượt trần để người đối soát ghi tay.
+    cap = ctx.tools.ops_limits().get("max_auto_strikes_per_carrier_per_day")
+    today = len(ctx.tools.fault_rows(carrier_id=parcel["carrier_id"]))
+    if cap is not None and today >= cap:
+        ctx.log("carrier_strike_cap", carrier_id=parcel["carrier_id"], today=today, cap=cap)
+        return Verdict.deny(f"hãng {parcel['carrier_id']} đã có {today} lỗi tự động hôm nay (trần {cap}): để người đối soát ghi tay")
     if (action.get("parcel_id"), action.get("carrier_id")) != (parcel["parcel_id"], parcel["carrier_id"]):
         return Verdict.modify("ghi lỗi đúng kiện bị trễ và đúng hãng giao kiện đó", parcel_id=parcel["parcel_id"],
                               carrier_id=parcel["carrier_id"], driver_id=parcel.get("driver_id"), delay_days=delay)

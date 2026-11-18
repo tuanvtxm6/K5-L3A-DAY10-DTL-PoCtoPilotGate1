@@ -10,7 +10,7 @@
   "decision_v2": "Tiếp tục",
   "three_lines": {
     "environment_assumption": "Hệ thống ngầm tin rằng dữ liệu trạng thái kiện hàng trong tracking DB luôn hoàn chỉnh (hễ status là DELIVERED thì delivered_date luôn có giá trị chính xác và cập nhật kịp thời), nhưng thực tế trạm bưu cục GHSH có thể quét thiếu hoặc đồng bộ trễ khiến trường ngày giao bị null.",
-    "reduce_or_prevent": "Gate của đội thực sự NGĂN ĐƯỢC tác hại vì ở pre_guard mọi kiện hàng có status DELIVERED nhưng thiếu delivered_date đều bị chặn tự động hóa và chuyển bắt buộc sang người duyệt đối soát thủ công, đồng thời _gate_fault chặn cứng không cho phép tự động ghi quá 2 lỗi/ngày cho bất kỳ hãng nào.",
+    "reduce_or_prevent": "Vừa NGĂN vừa chỉ GIẢM: cổng 5 (_tracking_gap trong _gate_refund/_gate_fault) NGĂN hẳn việc tự tính độ trễ, hoàn tiền và ghi lỗi cho kiện DELIVERED mà trống delivered_date (chuyển người trước khi tiền đi), cổng 6 (_gate_fault) NGĂN máy tự ghi quá 2 lỗi/hãng/ngày; nhưng chỉ GIẢM nguy cơ hãng bị ngưng tuyến vì ngưỡng hợp đồng tính theo 7 ngày (GHSH 3 lỗi/7 ngày) mà cổng chỉ đếm trong ngày, và cổng 4 trong pre_guard chỉ GIẢM việc lời khai đè tracking vì chỉ bỏ được số ngày viết bằng chữ số.",
     "measure_in_pilot": "Cần đo lại tỉ lệ kiện hàng bị thiếu ngày giao trong luồng dữ liệu tracking thực tế của GHSH, độ trễ đồng bộ API giữa LogiX và hệ thống bưu cục, và thời gian nhân viên CSKH xử lý thực tế các ca chuyển duyệt để đảm bảo hàng chờ không bị ùn ứ."
   }
 }
