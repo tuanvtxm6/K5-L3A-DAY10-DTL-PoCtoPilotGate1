@@ -44,7 +44,7 @@
 | ⬜ | Kỹ sư cổng | Chạy `base`, so với tiêu chí ký; ghi mã run và đọc số kinh doanh/vận hành, kho/hãng. | Phiếu B, B0–B1; lệnh `eval`, `gate` |
 | ⬜ | Kỹ sư cổng | Trace `T-002@55`, ghi bằng chứng và phân loại lỗi. | Phiếu B, B2; lệnh `trace` |
 | ⬜ | Sản phẩm và kinh doanh | Lập bản đồ dữ liệu, nêu ví dụ drift và metric phát hiện. | Phiếu B, B3 |
-| ⬜ | Vận hành và pháp lý | Làm HAZOP vòng 1 và checklist 9 nhóm có PIC nêu tên. | Phiếu B, B4–B5 |
+| ✅ | Vận hành và pháp lý | Làm HAZOP vòng 1 và điền checklist 9 nhóm có PIC. Các trạng thái checklist go-live vẫn ghi “Chưa” ở những phần đang chờ đo/test; đó là trạng thái sẵn sàng, không phải mục phiếu còn trống. | Phiếu B, B4–B5 |
 | ⬜ | Cả bàn | Làm pre-mortem bốn lăng kính, chọn 2–3 lý do thành cổng. | Phiếu B, B6 |
 
 ### CP3B · Dựng cổng vòng 1 (phút 85–105)
@@ -53,7 +53,7 @@
 |---|---|---|---|
 | ⬜ | Kỹ sư cổng | Viết 2–3 cổng; nêu biện pháp tránh rò dữ liệu; viết behavioral test và chạy hai ticket hiểm. | `lab10/guards.py`; Phiếu B, B7.1–B7.3 |
 | ⬜ | Sản phẩm và kinh doanh | Chọn trần hoàn, ngân sách/ticket, phạm vi pilot và ROI; ghi căn cứ. | `config/operating_gates.json`, `business`; Phiếu B, B7.4 |
-| ⬜ | Vận hành và pháp lý | Điền PIC, người duyệt, nhân lực, công suất, SLA, điều kiện dừng, kênh cảnh báo và quy tắc pháp lý; viết runbook 1–3 và giờ cao điểm. | `config/operating_gates.json`, `operations`/`legal`; Phiếu B, B7.5–B7.6 |
+| ✅ | Vận hành và pháp lý | Điền PIC, người duyệt, nhân lực, công suất, SLA, điều kiện dừng, kênh cảnh báo và quy tắc pháp lý; viết runbook 1–3 và giờ cao điểm. Cần tạo/xác nhận kênh cảnh báo và chỉ định người duyệt dự phòng trước pilot. | `config/operating_gates.json`, `operations`/`legal`; Phiếu B, B7.5–B7.6 |
 | ⬜ | Cả bàn | Chạy lại eval và test; xác nhận không làm hỏng ticket đang đúng. | Eval `after`; `python3 -m unittest discover -s tests` |
 
 ### CP3C · Chốt cổng và quyết định v1 (phút 105–115)
