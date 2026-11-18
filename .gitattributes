@@ -1,0 +1,2 @@
+# Hash của tiêu chí, bản chốt vòng 1 và MANIFEST tính trên byte LF: giữ LF trên mọi máy (kể cả Windows)
+* text=auto eol=lf
