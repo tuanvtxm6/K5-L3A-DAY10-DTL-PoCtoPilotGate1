@@ -9,6 +9,8 @@
   "operations": {
     "pic": "NV-TUNG",
     "approver_id": "NV-HANH",
+    "pic": "NV-TUNG",
+    "approver_id": "NV-HANH",
     "reviewers_on_shift": 1,
     "review_capacity_per_hour": 6,
     "max_queue_wait_minutes": 60,
