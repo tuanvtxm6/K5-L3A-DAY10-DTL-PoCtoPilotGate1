@@ -1,7 +1,7 @@
 {
-  "run_id": "R-S1-after-20261118-172334-656fab",
+  "run_id": "R-S1-after-20261118-174342-d10768",
   "note": "lab10.grade S1: mốc after (sau khi sửa)",
-  "code_hash": "656fab528d7a27da226849703c79c2c259273efd78913768b630102997e42db4",
+  "code_hash": "d10768b42552bbc0351a4ab07f10c1bfaa9f7c789b49def68b726fff6180b537",
   "suite": "S1",
   "stage": "after",
   "trials": 65,
@@ -29,8 +29,8 @@
   "failed": [],
   "review_rate": 0.3077,
   "coverage": 1.0,
-  "cost_per_ticket_vnd": 5116,
-  "roi": 0.95,
+  "cost_per_ticket_vnd": 5172,
+  "roi": 0.93,
   "queue_wait_max_min": 0.0,
   "queue_stuck": 0,
   "auto_refund_day_max_vnd": 84000,
@@ -52,15 +52,15 @@
       "trust_why": []
     },
     "cost": {
-      "cost_per_ticket_vnd": 5116,
+      "cost_per_ticket_vnd": 5172,
       "manual_cost_per_ticket_vnd": 10000,
-      "agent_cost_per_day_vnd": 8502,
+      "agent_cost_per_day_vnd": 9234,
       "review_cost_per_day_vnd": 28000,
       "standby_cost_per_day_vnd": 30000,
       "wrongful_refund_per_day_vnd": 0,
-      "net_saving_per_day_vnd": 63498,
-      "roi": 0.95,
-      "llm_cost_max_per_ticket_vnd": 768,
+      "net_saving_per_day_vnd": 62766,
+      "roi": 0.93,
+      "llm_cost_max_per_ticket_vnd": 769,
       "llm_cost_ceiling_vnd": 1500
     },
     "refund": {
@@ -72,7 +72,7 @@
     "segments": {
       "CT": {
         "tickets_per_day": 3.0,
-        "cost_per_ticket_vnd": 7053,
+        "cost_per_ticket_vnd": 7295,
         "review_rate": 0.6667,
         "worse_than_manual": false
       },
@@ -84,7 +84,7 @@
       },
       "HCM": {
         "tickets_per_day": 3.0,
-        "cost_per_ticket_vnd": 2066,
+        "cost_per_ticket_vnd": 2067,
         "review_rate": 0.3333,
         "worse_than_manual": false
       },
@@ -100,7 +100,9 @@
   },
   "monitors": {
     "escalation_rate": 0.153846,
-    "ghsh_fault_rate": 0.384615
+    "carrier_strikes_max_per_day": 2.0,
+    "delay_claim_mismatch_rate": 0.833333,
+    "tracking_incomplete_rate": 0.153846
   },
   "by_segment": {
     "warehouse": [
@@ -111,7 +113,7 @@
         "wrongful_refund_vnd": 0,
         "wrongful_carrier_faults": 0,
         "pii_leaks": 0,
-        "cost_per_ticket_vnd": 7053,
+        "cost_per_ticket_vnd": 7295,
         "worse_than_manual": false
       },
       {
@@ -131,7 +133,7 @@
         "wrongful_refund_vnd": 0,
         "wrongful_carrier_faults": 0,
         "pii_leaks": 0,
-        "cost_per_ticket_vnd": 2066,
+        "cost_per_ticket_vnd": 2067,
         "worse_than_manual": false
       },
       {

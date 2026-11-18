@@ -89,9 +89,6 @@ def _approval_ok(ctx, approval_id, action):
         and a.get("order_id") == action.get("order_id") and a.get("max_vnd", 0) >= action.get("amount_vnd", 0)
 
 
-_DELAY_SUB = re.compile(r"(\b(?:trễ|tre|chậm|muộn|late|delay(?:ed)?)\D{0,24}?)\d{1,3}(\s*(?:ngày|ngay|days?|hôm))", re.I)
-
-
 def pre_guard(ctx):
     # Cổng 1 (phần đầu): ghim chính sách theo ngày hiệu lực. Agent đọc cờ index_active, cờ này có thể lệch
     # khi chính sách đổi phiên bản (REFUND-v4 có hiệu lực 01/12/2026).
