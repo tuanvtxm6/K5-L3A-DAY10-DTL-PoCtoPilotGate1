@@ -24,6 +24,59 @@ Ghi `members` trong `submission/submission.json` theo dạng `"HoVaTen-MSSV"`, k
 
 Mỗi thành viên tự viết một mục bên dưới (chép mẫu, đổi tiêu đề thành họ tên không dấu và MSSV, ví dụ `## NguyenVanAn-20241234`).
 
+## LucAnhTuan-2A202603634
+
+### Phần việc phụ trách
+
+- **Vai trong bàn:** Kỹ sư cổng, trưởng nhóm.
+- **CP1:** Tạo repo bàn từ template, nối `origin` (repo bàn) và `upstream` (repo lớp); điền bảng thành viên và thông tin nhóm trong `TEAM.md`; đưa PRD v1.1 và eval card Lab 9 của mình làm bản chung (`docs/lab9/`); thêm `.gitattributes` giữ LF để hash tiêu chí và `MANIFEST` khớp trên Windows; chạy bài kiểm tra công khai (`Ran 13 tests … OK`).
+- **CP2 (Phiếu A):** Viết metric offline cho bước ghi lỗi hãng (mục A2 · Câu 1.3); cầm bút ghi Phiếu A (A1–A5) theo nội dung cả bàn chốt; chạy lệnh ký tiêu chí trên máy mình và push commit ký (Đạt đứng tên ký thay mặt bàn).
+- **CP3 (Phiếu B):** Chạy `base` và đọc số so với tiêu chí đã ký (B0–B1 · Câu 2.1); trace `T-002@55` và phân loại lỗi (B2 · Câu 2.2); viết 3 cổng vòng 1 trong `lab10/guards.py` (B7.1 · Câu 2.6), hai bước tránh rò dữ liệu (B7.2 · Câu 2.7) và behavioral test hai ticket hiểm (B7.3 · Câu 2.8).
+- **CP4 (Phiếu C, thẻ S1):** Nhận bộ thẻ S1–S8 khớp `MANIFEST`; chạy `lab10.grade --incident S1` trước khi sửa và đọc số base/prepared (C0, C1); trace 3 ticket lỗi khác kiểu `S1-20`, `S1-42`, `S1-07` (C2); viết cổng 4–6 trong `lab10/guards.py` và 3 monitor trong `lab10/monitors.py` (C7, C8); chạy eval sự cố, regression bộ nền và grade.
+- **CP5:** Sau khi gộp nhánh của Đạt, rà cho Phiếu C khớp code (C4, C5, C6, C7, C9, C12, ba dòng giảm/ngăn), bỏ code thừa `_DELAY_SUB`, chạy lại grade trên đúng code `d10768` và gom bài (`check_submission --collect`).
+
+### Đóng góp cụ thể
+
+- **Cổng vòng 1 (CP3)**, trong `write_gate` của `lab10/guards.py`:
+  - `issue_refund`: so số tiền với quyền lợi tính theo tracking (`db_delay_days`, `entitlement_vnd`), không theo số ngày khách khai.
+  - `file_carrier_fault`: chỉ ghi lỗi khi `carrier_at_fault` đúng theo `delay_cause` trong tracking.
+  - `notify_carrier`: bỏ các trường PII trước khi gửi hãng.
+  - Kết quả: bộ nền từ pass_rate 0,9909 (hoàn sai 20.000đ, 1 lỗi oan cho VNX ở `T-002@55`) lên 1,0, hoàn sai 0đ, lỗi oan 0.
+  - Vòng 2: viết lại `write_gate` gọi 3 cổng `_gate_refund`, `_gate_fault`, `_gate_notice` (thêm kiểm payer, fail-open khi LLM lỗi, ghi trùng, phê duyệt, đúng kiện, lọc PII theo `config/operating_gates.json` mục `legal`).
+- **Sửa sự cố S1 (CP4)**, ba cổng mới, mỗi cổng ứng một nhánh fault tree:
+  - Cổng 4 (`pre_guard`): regex `_DAY_CLAIM` bỏ số ngày khách tự khai khỏi chữ model đọc (`Verdict.rewrite`), nên `S1-07` (khách khai thấp, bị hoàn thiếu) đạt 5/5.
+  - Cổng 5 (`_tracking_gap`): kiện `DELIVERED` mà trống `delivered_date` thì `_gate_refund` chuyển người trước khi tiền đi, `_gate_fault` không ghi lỗi (`S1-20`, `S1-21`).
+  - Cổng 6 (`_gate_fault`): từ lỗi thứ 3 của cùng hãng trong ngày thì `deny`, trần đọc từ `ops_limits.max_auto_strikes_per_carrier_per_day` (= 2) (`S1-42`, `S1-43`).
+  - Kết quả trên gói S1: pass_rate 0,3077 (base) → 0,6154 (prepared) → 1,0 (after); hoàn sai 985.000đ → 0đ; lỗi oan cho hãng 30 → 0; hoàn thiếu 105.000đ → 0đ. Bộ nền giữ 110/110, không ca nào hỏng thêm.
+- **Monitor mới (C8)**: `carrier_strikes_max_per_day` (S1 base 4 → after 2, đúng trần), `delay_claim_mismatch_rate` (bộ nền 0,2, S1 0,8333), `tracking_incomplete_rate` (S1 after 0,1538). Mục `6 monitor` của grader ✅.
+- **Phiếu và bài nộp**: viết Phiếu B mục B0–B2, B7.1–B7.3 và Phiếu C mục C0, C1 (số liệu), C2, C7, C8. Rà các mục còn lại của Phiếu C cho khớp code, đúng chỗ đặt cổng 5 và tên monitor. Gom bài đạt `ĐỦ THÀNH PHẦN`.
+- **Dùng AI**: dùng Claude Code (Claude Opus) để đọc code starter, gợi ý cách viết cổng và rà phiếu cho khớp code. Ngưỡng, chỗ đặt cổng và quyết định v1/v2 do bàn chốt; mình tự chạy lại eval, grade và đối chiếu từng con số trong report trước khi ghi vào phiếu.
+
+### Bằng chứng
+
+- **Commit:**
+  - `2ff038c`, `55fe3d7`: điền bảng thành viên, thông tin nhóm
+  - `e53ac41`: chốt bản chung Lab 9 (PRD v1.1, eval card)
+  - `f2dfec4`: `.gitattributes` giữ LF
+  - `dc9855b`: ký tiêu chí chấp nhận · `0cc93d8`: Phiếu A A1–A5
+  - `6eef598`: 3 cổng vòng 1 trong `guards.py`; Phiếu B B0–B2, B7.1–B7.3
+  - `08b3dff`: `write_gate` vòng 2 gọi 3 cổng `_gate_*`, lọc PII theo config `legal`
+  - `e144fbc`: nhận thẻ S1–S8, bàn bốc S1
+  - `5ec3648`: cổng 4–6, 3 monitor; Phiếu C C0, C1, C2, C7, C8
+  - `13a0e16`: Phiếu C khớp code, bỏ `_DELAY_SUB`, gom lại bài nộp trên code `d10768`
+- **Mã lần chạy:**
+  - Bộ nền base: `R-base-before-20261118-153134-b45eeb` · after cổng vòng 1: `R-base-after-20261118-153223-36155f` · regression sau sửa S1: `R-base-after-20261118-170342-d10768` (pass_rate 1,0, ROI 1,24)
+  - S1 grade trước sửa: `R-S1-grade-20261118-165621-663d99` (base `R-S1-before-20261118-165622-663d99`, prepared `R-S1-prepared-20261118-165622-663d99`)
+  - S1 after sửa: `R-S1-after-20261118-170342-d10768` (pass_rate 1,0, hoàn sai 0đ, oan 0, chi phí 5.172đ, ROI 0,93)
+  - S1 grade bản nộp: `R-S1-grade-20261118-174342-d10768` (PASS-VISIBLE, 5/5 kiểm đạt)
+- **Trong phiếu:** `templates/form-a-criteria.md` A2 (câu 1.3); `templates/form-b-evaluation-gates.md` B0, B1, B2, B7.1–B7.3; `templates/form-c-incident.md` C0, C1, C2, C7, C8 (và rà C4, C5, C6, C9, C11, C12)
+- **Code:** `lab10/guards.py` (`pre_guard`, `_tracking_gap`, `_gate_refund`, `_gate_fault`, `_gate_notice`, `write_gate`), `lab10/monitors.py`
+
+### Exit ticket
+
+- **Một điều học được:** Mỗi nguyên nhân cần một cổng ở đúng tầng của nó. Riêng cổng so tiền với tracking ở vòng 1 đã cắt được nửa số lỗi oan của S1, nhưng không bắt được dữ liệu tracking thiếu trường hay lỗi dồn theo hãng trong ngày, vì đó là lỗi ở dữ liệu và ở vận hành, không phải ở từng lệnh ghi. Cổng cũng phải đọc trần từ dữ liệu của Ops (`ops_limits`) chứ không viết cứng trong code.
+- **Một điều còn chưa chắc:** Cổng 4 chỉ bỏ được số ngày viết bằng chữ số. Một LLM thật vẫn hiểu "trễ hai ngày" viết bằng chữ, và chiều khai thấp chỉ có cổng này đỡ. Cổng 6 cũng chỉ đếm trong ngày, trong khi ngưỡng hợp đồng của GHSH tính theo 7 ngày. Pilot thật cần đo lại cả hai chỗ này.
+
 ## MaiLamTanDat-2A202603645
 
 ### Phần việc phụ trách
