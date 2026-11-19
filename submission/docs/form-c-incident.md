@@ -34,6 +34,8 @@ Mỗi lệnh `lab10.eval` và `lab10.grade` tự ghi một dòng vào `runs/jour
 | 2 | `R-S1-after-20261118-165622-663d99` | S1 · after | `write_gate` gọi lại 3 cổng `_gate_*` (bản chụp vòng 1 viết gọn hơn); chưa sửa gì cho S1 | 0,6154 [0,3077; 0,8462] | 0,6154 | 275.000đ · 15 · 0 | 0,0 | Không đổi trên S1: các kiểm thêm (payer, phê duyệt, đúng kiện) không chạm nguyên nhân của thẻ này |
 | 3 | `R-S1-after-20261118-170342-d10768` | S1 · after | Thêm cổng 4–6 trong `guards.py` (bỏ số ngày khách khai; tracking thiếu thì chuyển người; trần 2 lỗi/hãng/ngày) + 3 monitor | 1,0 [1,0; 1,0] | 1,0 | 0đ · 0 · 0 (hoàn thiếu 0đ) | 0,1538 | 65/65 lần chạy đạt, không vượt trần; chi phí 5.172đ/ticket, ROI 0,93 |
 | 4 | `R-base-after-20261118-170342-d10768` | base · after | (kiểm không regression) | 1,0 [1,0; 1,0] | 1,0 | 0đ · 0 · 0 | 0,2273 | Bộ nền giữ 110/110, tỉ lệ chuyển người không đổi; tự kiểm tra `R-S1-grade-20261118-170351-d10768`: PASS-VISIBLE |
+| 5 | `R-S1-after-20261118-174107-c2ccb8` | S1 · after (trong `lab10.grade`) | Bản gộp sau merge nhánh `feature/datmlt` (còn biến `_DELAY_SUB` không dùng trong `guards.py`; hàm `ghsh_fault_rate` của nhánh này không giữ lại khi gộp vì trùng ý `carrier_strikes_max_per_day`) | 1,0 [1,0; 1,0] | 1,0 | 0đ · 0 · 0 | 0,1538 | Số không đổi; bỏ `_DELAY_SUB` cho code sạch |
+| 6 | `R-S1-after-20261118-174342-d10768` | S1 · after (trong `lab10.grade`) | Gỡ phần thừa ở dòng 5, code quay về đúng hash `d10768` của dòng 3 | 1,0 [1,0; 1,0] | 1,0 | 0đ · 0 · 0 (hoàn thiếu 0đ) | 0,1538 | Bản nộp: tự kiểm tra `R-S1-grade-20261118-174342-d10768` PASS-VISIBLE, dùng làm bằng chứng cho C6, C9, C12 |
 
 ---
 
@@ -115,7 +117,7 @@ người chịu hại thường là bên thứ ba). Định nghĩa đầy đủ 
 | Đường đi của người sau khi có giải pháp (ví dụ: ticket chuyển sang người duyệt → duyệt → khách được trả lời) | Ticket vào hàng chờ chị Hạnh → hỏi GHSH ngày giao trên phiếu ký nhận → sửa tracking → hoàn tay nếu đủ điều kiện, không ghi lỗi nếu giao đúng hẹn | Khách vẫn được hoàn tự động; lỗi hãng thứ 3+ không ghi → chị Oanh đối chiếu cuối ngày, ghi tay nếu đúng | Trợ lý tính theo tracking → hoàn 21.000đ, ghi lỗi VNX (`S1-07` đạt 5/5) |
 | Hệ thống học được gì (tín hiệu ghi lại để theo dõi: tên metric trong `monitors.py`) | `tracking_incomplete_rate` (sự kiện guard `tracking_incomplete`) | `carrier_strikes_max_per_day` (sự kiện guard `carrier_strike_cap` khi chạm trần) | `delay_claim_mismatch_rate` (sự kiện guard `delay_claim`) |
 
-Yêu cầu: Ít nhất **hai lỗi có nguồn khác nhau** ở phần 2 (Lỗi 1: Đầu vào; Lỗi 2: Độ liên quan/Dữ liệu thiếu; Lỗi 3: Giới hạn quyền hạn/Vận hành), và Lỗi 2 được xếp đúng là **lỗi chìm**.
+Yêu cầu: ít nhất **hai lỗi có nguồn khác nhau** ở phần 2, và ít nhất một lỗi được xếp đúng là **lỗi chìm**. Bàn có ba nguồn khác nhau (Lỗi 1: Độ liên quan, dữ liệu thiếu; Lỗi 2: Thứ bậc hệ thống và Trạng thái hỏng; Lỗi 3: Đầu vào) và hai lỗi chìm (Lỗi 1, Lỗi 3).
 
 ---
 
@@ -229,7 +231,7 @@ python3 -m lab10.grade --incident S1
 
 ## C8 · Câu 3.6 · Chỉ số theo dõi mới (thước đo → dữ liệu → cách tính)
 
-Thêm hàm `ghsh_fault_rate` trong `lab10/monitors.py` và đăng ký vào `MONITORS`.
+Thêm 3 hàm `carrier_strikes_max_per_day`, `delay_claim_mismatch_rate`, `tracking_incomplete_rate` trong `lab10/monitors.py` và đăng ký vào `MONITORS`.
 
 | | Chỉ số theo dõi mới của bàn |
 |---|---|
